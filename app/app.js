@@ -1,5 +1,6 @@
 (function(){
-  const START_HOUR = 6, END_HOUR = 23;
+  const START_HOUR = 0;
+  const END_HOUR = 23;
   const STORAGE_PREFIX = 'daybook:';
   const RECUR_KEY = 'daybook:recurring';
   let current = new Date();
