@@ -1,1 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Daybook — Minimalist, high-performance daily planner with timeline, priorities, pomodoro focus station, ambient sounds, and local persistence.">
+<title>Daybook — Daily Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand-title">
+      <span>📖 Daybook</span>
+      <span class="brand-badge">PRO</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="searchModalBtn" aria-label="Search tasks" title="Search tasks (Ctrl+K)">🔍</button>
+      <button class="icon-btn" id="notifBtn" aria-label="Enable notifications" title="Enable task reminders">🔔</button>
+      <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode" title="Toggle dark/light mode">🌙</button>
+    </div>
+  </div>
+
+  <header>
+    <div class="date-block">
+      <div class="date-nav">
+        <button id="prevDay" aria-label="Previous day">‹</button>
+        <button id="nextDay" aria-label="Next day">›</button>
+      </div>
+      <div class="day-num" id="dayNum">29</div>
+      <div class="day-meta">
+        <div class="day-name" id="dayName">Wednesday</div>
+        <div class="month-year" id="monthYear">July 2026</div>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
+      <div class="week-strip" id="weekStrip"></div>
+      <button class="today-btn" id="todayBtn">Jump to today</button>
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- Left Column: Timeline & Productivity -->
+    <div>
+      <section class="panel" aria-labelledby="timeline-label">
+        <h2 class="label" id="timeline-label">
+          Timeline 
+          <span class="count" id="taskCount">0 tasks</span>
+        </h2>
+        <div id="timeline"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="productivity-label">
+        <h2 class="label" id="productivity-label">
+          Productivity 
+          <span class="count">last 7 days</span>
+        </h2>
+        <div class="chart-wrap" id="chartWrap"></div>
+      </section>
+    </div>
+
+    <!-- Right Column: Focus & Priorities -->
+    <div>
+      <section class="panel" aria-labelledby="priorities-label">
+        <h2 class="label" id="priorities-label">
+          Today's Three Focus
+          <span class="label-actions">
+            <button class="chip-btn" id="aiSuggestBtn">✨ Smart Rank</button>
+          </span>
+        </h2>
+        <div id="priorities"></div>
+        <p class="ai-note">Suggestions are ranked locally from open timeline tasks — high urgency keywords and earlier hours rank higher. 100% private.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="pomo-label">
+        <h2 class="label" id="pomo-label">Focus Station</h2>
+        <div class="pomo-display">
+          <div class="pomo-mode" id="pomoMode">Focus</div>
+          <div class="pomo-time" id="pomoTime">25:00</div>
+          <div class="pomo-sessions" id="pomoSessions">0 sessions completed</div>
+        </div>
+        <div class="pomo-controls">
+          <button class="pomo-btn primary" id="pomoStart">Start Focus</button>
+          <button class="pomo-btn" id="pomoReset">Reset</button>
+          <button class="pomo-btn" id="pomoSkip">Skip</button>
+        </div>
+        <div class="pomo-lengths">
+          <label>Work <input type="number" id="pomoWorkLen" min="1" max="90" value="25">m</label>
+          <label>Break <input type="number" id="pomoBreakLen" min="1" max="30" value="5">m</label>
+        </div>
+
+        <div class="ambient-row">
+          <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--ink-soft);">Ambient Sound:</span>
+          <button class="ambient-btn" id="amb-rain">🌧️ Rain</button>
+          <button class="ambient-btn" id="amb-noise">🌊 Soft Wave</button>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="notes-label">
+        <h2 class="label" id="notes-label">Notes & Scratchpad</h2>
+        <textarea class="notes-area" id="notes" placeholder="Loose thoughts, quick ideas, meeting snippets..."></textarea>
+        <div class="notes-footer">
+          <span id="wordCount">0 words</span>
+          <span>Auto-saved</span>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="export-label">
+        <h2 class="label" id="export-label">Export & Backup</h2>
+        <div class="export-row">
+          <button class="export-btn" id="exportCsv">📤 CSV File</button>
+          <button class="export-btn" id="exportPdf">📤 PDF Sheet</button>
+          <button class="export-btn" id="exportBackup">💾 JSON Backup</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>Daybook · Personal Daily Command Center · Built for Focus</footer>
+</div>
+
+<!-- Search Modal -->
+<div class="modal-overlay" id="searchModal" role="dialog" aria-modal="true" aria-labelledby="searchModalTitle">
+  <div class="modal-card">
+    <h3 class="modal-title" id="searchModalTitle">
+      <span>Search Tasks</span>
+      <button class="modal-close" id="searchModalClose" aria-label="Close search">&times;</button>
+    </h3>
+    <input type="text" class="search-input" id="searchInput" placeholder="Type task name or keyword..." autofocus>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
 
